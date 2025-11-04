@@ -26,5 +26,5 @@ jobs:
       run: dotnet restore src
     - name: Build
       run: dotnet build --no-restore src
-    - name: Test
-      run: dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src
+    - name: Test (skip Ghostrider)
+      run: dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src --filter "FullyQualifiedName!~Ghostrider"

@@ -1,4 +1,4 @@
-name: .NET
+name: .NET Build & Test
 
 on:
   push:
@@ -8,23 +8,40 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, debian-latest, windows11]
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 0    
-    - name: Install Build dependencies
-      run: sudo apt-get install -y cmake cmake ninja-build build-essential libssl-dev pkg-config libboost-all-dev libsodium-dev libzmq5 libgmp-dev
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+        fetch-depth: 0
+
+    # 🔧 Nur für Debian/Ubuntu: benötigte native Pakete installieren
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build build-essential \
+          libssl-dev pkg-config libboost-all-dev libsodium-dev \
+          libzmq5 libgmp-dev
+
+    # 🪟 Windows: keine extra Dependencies nötig (falls nicht self-hosted)
+    # Self-hosted Windows 11 Runner braucht evtl. vcpkg oder OpenSSL manuell installiert
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
+
     - name: Restore dependencies
       run: dotnet restore src
+
     - name: Build
       run: dotnet build --no-restore src
-    - name: Test (skip Ghostrider)
+
+    - name: Run tests (skip Ghostrider)
       run: dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src --filter "FullyQualifiedName!~Ghostrider"

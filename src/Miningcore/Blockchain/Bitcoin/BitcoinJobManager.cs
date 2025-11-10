@@ -13,6 +13,7 @@ using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Miningcore.Blockchain.Bitcoin;
 
@@ -32,6 +33,17 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
     protected override object[] GetBlockTemplateParams()
     {
         var result = base.GetBlockTemplateParams();
+        
+        if(coin.HasMWEB)
+        {
+            result = new object[]
+            {
+                new
+                {
+                    rules = new[] {"segwit", "mweb"},
+                }
+            };
+        }
 
         if(coin.BlockTemplateRpcExtraParams != null)
         {
@@ -42,6 +54,39 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
         }
 
         return result;
+    }
+    
+    protected override async Task EnsureDaemonsSynchedAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+
+        var syncPendingNotificationShown = false;
+
+        do
+        {
+            var response = await rpc.ExecuteAsync<BlockTemplate>(logger,
+                BitcoinCommands.GetBlockTemplate, ct, GetBlockTemplateParams());
+
+            var isSynched = response.Error == null;
+
+            if(isSynched)
+            {
+                logger.Info(() => "All daemons synched with blockchain");
+                break;
+            }
+            else
+            {
+                logger.Debug(() => $"Daemon reports error: {response.Error?.Message}");
+            }
+
+            if(!syncPendingNotificationShown)
+            {
+                logger.Info(() => "Daemon is still syncing with network. Manager will be started once synced.");
+                syncPendingNotificationShown = true;
+            }
+
+            await ShowDaemonSyncProgressAsync(ct);
+        } while(await timer.WaitForNextTickAsync(ct));
     }
 
     protected async Task<RpcResponse<BlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
@@ -113,15 +158,6 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
                     !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue);
 
-                lock(jobLock)
-                {
-                    validJobs.Insert(0, job);
-
-                    // trim active jobs
-                    while(validJobs.Count > maxActiveJobs)
-                        validJobs.RemoveAt(validJobs.Count - 1);
-                }
-
                 if(isNew)
                 {
                     if(via != null)
@@ -168,6 +204,12 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
     {
         var job = currentJob;
         return job?.GetJobParams(isNew);
+    }
+
+    public override BitcoinJob GetJobForStratum()
+    {
+        var job = currentJob;
+        return job;
     }
 
     #region API-Surface
@@ -229,9 +271,9 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         BitcoinJob job;
 
-        lock(jobLock)
+        lock(context)
         {
-            job = validJobs.FirstOrDefault(x => x.JobId == jobId);
+            job = context.GetJob(jobId);
         }
 
         if(job == null)

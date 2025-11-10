@@ -146,12 +146,9 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
     {
         var info = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
         
-        if(info.Status != "OK")
+        if(info.Status == "OK")
         {
-            var lowestHeight = info.Height;
-
-            var totalBlocks = info.TargetHeight;
-            var percent = (double) lowestHeight / totalBlocks * 100;
+            var percent = (double) info.TargetHeight / info.Height * 100;
 
             logger.Info(() => $"Daemon has downloaded {percent:0.00}% of blockchain from {info.OutgoingConnectionsCount} peers");
         }
@@ -194,6 +191,23 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
         }
 
         return true;
+    }
+
+    public void PrepareWorkerJob(ConcealWorkerJob workerJob, out string blob, out string target)
+    {
+        blob = null;
+        target = null;
+
+        var job = currentJob;
+
+        if(job != null)
+            job.PrepareWorkerJob(workerJob, out blob, out target);
+    }
+
+    public override ConcealJob GetJobForStratum()
+    {
+        var job = currentJob;
+        return job;
     }
 
     #region API-Surface
@@ -254,7 +268,7 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
                 .ToArray();
 
             if(walletDaemonEndpoints.Length == 0)
-                throw new PoolStartupException("Wallet-RPC daemon is not configured (Daemon configuration for conceal-pools require an additional entry of category \'wallet' pointing to the wallet daemon)", pc.Id);
+                throw new PoolStartupException("Wallet-RPC daemon is not configured (Daemon configuration for conceal-pools require an additional entry of category 'wallet' pointing to the wallet daemon)", pc.Id);
         }
 
         ConfigureDaemons();
@@ -286,22 +300,6 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
     }
 
     public BlockchainStats BlockchainStats { get; } = new();
-
-    public void PrepareWorkerJob(ConcealWorkerJob workerJob, out string blob, out string target)
-    {
-        blob = null;
-        target = null;
-
-        var job = currentJob;
-
-        if(job != null)
-        {
-            lock(job)
-            {
-                job.PrepareWorkerJob(workerJob, out blob, out target);
-            }
-        }
-    }
 
     public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
         ConcealSubmitShareRequest request, ConcealWorkerJob workerJob, CancellationToken ct)
@@ -392,21 +390,35 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
         logger.Debug(() => "Checking if conceald daemon is healthy...");
         
         // test daemons
-        var response = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
-        if(response.Status != "OK")
+        try
         {
-            logger.Debug(() => $"conceald daemon did not responded...");
-            return false;
+            var request = new GetBlockTemplateRequest
+            {
+                WalletAddress = poolConfig.Address,
+                ReserveSize = ConcealConstants.ReserveSize
+            };
+
+            var response = await rpc.ExecuteAsync<GetBlockTemplateResponse>(logger,
+                ConcealCommands.GetBlockTemplate, ct, request);
+
+            if(response.Error != null)
+                logger.Debug(() => $"conceald daemon response: {response.Error.Message} (Code {response.Error.Code})");
+
+            if(response.Error is {Code: -9})
+                return false;
         }
         
-        logger.Debug(() => $"{response.Status} - Incoming: {response.IncomingConnectionsCount} - Outgoing: {response.OutgoingConnectionsCount})");
+        catch(Exception)
+        {
+            logger.Debug(() => $"conceald daemon does not seem to be running...");
+            return false;
+        }
         
         if(clusterConfig.PaymentProcessing?.Enabled == true && poolConfig.PaymentProcessing?.Enabled == true)
         {
             logger.Debug(() => "Checking if walletd daemon is healthy...");
             
             // test wallet daemons
-            //var response2 = await walletRpc.ExecuteAsync<GetAddressResponse>(logger, ConcealWalletCommands.GetAddress, ct);
             var request2 = new GetBalanceRequest
             {
                 Address = poolConfig.Address
@@ -427,16 +439,29 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
     {
         logger.Debug(() => "Checking if conceald daemon is connected...");
         
-        var response = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
+        try
+        {
+            var response = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
+
+            if(response?.Status != "OK")
+                logger.Debug(() => $"conceald daemon is not connected...");
+
+            if(response?.Status == "OK")
+                logger.Debug(() => $"Peers connected - Incoming: {response?.IncomingConnectionsCount} - Outgoing: {response?.OutgoingConnectionsCount}");
+
+            // update stats
+            if(!string.IsNullOrEmpty(response?.Version))
+                BlockchainStats.NodeVersion = response?.Version;
+
+            return response?.Status == "OK" &&
+                (response?.OutgoingConnectionsCount + response?.IncomingConnectionsCount) > 0;
+        }
         
-        if(response.Status != "OK")
-            logger.Debug(() => $"conceald daemon is not connected...");
-        
-        if(response.Status == "OK")
-            logger.Debug(() => $"Peers connected - Incoming: {response.IncomingConnectionsCount} - Outgoing: {response.OutgoingConnectionsCount}");
-        
-        return response.Status == "OK" &&
-            (response.OutgoingConnectionsCount + response.IncomingConnectionsCount) > 0;
+        catch(Exception)
+        {
+            logger.Debug(() => $"conceald daemon does not seem to be running...");
+            return false;
+        }
     }
 
     protected override async Task EnsureDaemonsSynchedAsync(CancellationToken ct)
@@ -449,24 +474,32 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
 
         do
         {
-            var request = new GetBlockTemplateRequest
+            try
             {
-                WalletAddress = poolConfig.Address,
-                ReserveSize = ConcealConstants.ReserveSize
-            };
+                var request = new GetBlockTemplateRequest
+                {
+                    WalletAddress = poolConfig.Address,
+                    ReserveSize = ConcealConstants.ReserveSize
+                };
 
-            var response = await rpc.ExecuteAsync<GetBlockTemplateResponse>(logger,
-                ConcealCommands.GetBlockTemplate, ct, request);
-            
-            if(response.Error != null)
-                logger.Debug(() => $"conceald daemon response: {response.Error.Message} (Code {response.Error.Code})");
+                var response = await rpc.ExecuteAsync<GetBlockTemplateResponse>(logger,
+                    ConcealCommands.GetBlockTemplate, ct, request);
 
-            var isSynched = response.Error is not {Code: -9};
+                if(response.Error != null)
+                    logger.Debug(() => $"conceald daemon response: {response.Error.Message} (Code {response.Error.Code})");
 
-            if(isSynched)
+                var info = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
+
+                if((response.Error is not {Code: -9}) && (response.Response?.Height >= info.Height))
+                {
+                    logger.Info(() => "All daemons synched with blockchain");
+                    break;
+                }
+            }
+
+            catch(Exception e)
             {
-                logger.Info(() => "All daemons synched with blockchain");
-                break;
+                logger.Error(e);
             }
 
             if(!syncPendingNotificationShown)
@@ -485,30 +518,35 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
 
         // coin config
         var coin = poolConfig.Template.As<ConcealCoinTemplate>();
-        var infoResponse = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
         
-        if(infoResponse.Status != "OK")
+        try
+        {
+            var infoResponse = await restClient.Get<GetInfoResponse>(ConcealConstants.DaemonRpcGetInfoLocation, ct);
+        
+            if(infoResponse?.Status != "OK")
+                throw new PoolStartupException($"Init RPC failed...", poolConfig.Id);
+        }
+        
+        catch(Exception)
+        {
+            logger.Debug(() => $"conceald daemon does not seem to be running...");
             throw new PoolStartupException($"Init RPC failed...", poolConfig.Id);
+        }
+        
+        // address validation
+        poolAddressBase58Prefix = CryptonoteBindings.DecodeAddress(poolConfig.Address);
+        if(poolAddressBase58Prefix == 0)
+            throw new PoolStartupException("Unable to decode pool-address", poolConfig.Id);
 
         if(clusterConfig.PaymentProcessing?.Enabled == true && poolConfig.PaymentProcessing?.Enabled == true)
         {
-            //var addressResponse = await walletRpc.ExecuteAsync<GetAddressResponse>(logger, ConcealWalletCommands.GetAddress, ct);
-            var request2 = new GetAddressRequest
-            {
-            };
-
-            var addressResponse = await walletRpc.ExecuteAsync<GetAddressResponse>(logger, ConcealWalletCommands.GetAddress, ct, request2);
+            var addressResponse = await walletRpc.ExecuteAsync<GetAddressResponse>(logger, ConcealWalletCommands.GetAddress, ct, new {});
 
             // ensure pool owns wallet
             //if(clusterConfig.PaymentProcessing?.Enabled == true && addressResponse.Response?.Address != poolConfig.Address)
             if(clusterConfig.PaymentProcessing?.Enabled == true && Exists(addressResponse.Response?.Address, element => element == poolConfig.Address) == false)
                 throw new PoolStartupException($"Wallet-Daemon does not own pool-address '{poolConfig.Address}'", poolConfig.Id);
         }
-
-        // address validation
-        poolAddressBase58Prefix = CryptonoteBindings.DecodeAddress(poolConfig.Address);
-        if(poolAddressBase58Prefix == 0)
-            throw new PoolStartupException("Unable to decode pool-address", poolConfig.Id);
 
         switch(networkType)
         {
@@ -581,38 +619,14 @@ public class ConcealJobManager : JobManagerBase<ConcealJob>
                 logger.Info(() => $"Subscribing to ZMQ push-updates from {string.Join(", ", zmq.Values)}");
 
                 var blockNotify = rpc.ZmqSubscribe(logger, ct, zmq)
-                    .Where(msg =>
-                    {
-                        bool result = false;
-
-                        try
-                        {
-                            var text = Encoding.UTF8.GetString(msg[0].Read());
-
-                            result = text.StartsWith("json-minimal-chain_main:");
-                        }
-
-                        catch
-                        {
-                        }
-
-                        if(!result)
-                            msg.Dispose();
-
-                        return result;
-                    })
                     .Select(msg =>
                     {
                         using(msg)
                         {
-                            var token = GetFrameAsJToken(msg[0].Read());
-
-                            if (token != null)
-                                return token.Value<long>("first_height").ToString(CultureInfo.InvariantCulture);
-
                             // We just take the second frame's raw data and turn it into a hex string.
                             // If that string changes, we got an update (DistinctUntilChanged)
-                            return msg[0].Read().ToHexString();
+                            var result = msg[0].Read().ToHexString();
+                            return result;
                         }
                     })
                     .DistinctUntilChanged()

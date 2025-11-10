@@ -28,17 +28,17 @@ CREATE TABLE blocks
     type TEXT NULL,
     confirmationprogress FLOAT NOT NULL DEFAULT 0,
 	effort FLOAT NULL,
+        minereffort FLOAT NULL,
 	transactionconfirmationdata TEXT NOT NULL,
 	miner TEXT NULL,
 	reward decimal(28,12) NULL,
     source TEXT NULL,
     hash TEXT NULL,
-	created TIMESTAMPTZ NOT NULL,
-
-    CONSTRAINT BLOCKS_POOL_HEIGHT UNIQUE (poolid, blockheight, type) DEFERRABLE INITIALLY DEFERRED
+	created TIMESTAMPTZ NOT NULL
 );
 
 CREATE INDEX IDX_BLOCKS_POOL_BLOCK_STATUS on blocks(poolid, blockheight, status);
+CREATE INDEX IDX_BLOCKS_POOL_BLOCK_TYPE on blocks(poolid, blockheight, type);
 
 CREATE TABLE balances
 (

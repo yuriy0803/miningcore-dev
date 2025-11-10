@@ -17,6 +17,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="allium.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="bcrypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -53,6 +56,9 @@
     <ClInclude Include="keccak.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="keccak512.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="neoscrypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -78,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="skein.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skein2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skydoge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdint.h">
@@ -156,6 +168,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Lyra2RE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="megabtx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Sponge.h">
@@ -245,6 +260,21 @@
     <ClInclude Include="sha3\extra.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shake\crypto\cpu_endian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shake\crypto\crypto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shake\cshake.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shake\keccak.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shake\shake.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="x21s.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -272,10 +302,40 @@
     <ClInclude Include="verthash\h2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="yescrypt\sha256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yescrypt\yescrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\crypto\blake2b-yp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\crypto\sph_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\insecure_memzero.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\sha256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\sysendian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="yespower\yespower.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="blake2\ref\blake2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="blake2\ref\blake2-impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blake3\blake3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blake3\blake3_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sha256csm.h">
@@ -285,6 +345,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="phi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="phi2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="x16rv2.h">
@@ -302,12 +365,117 @@
     <ClInclude Include="sha256dt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="minotaur\crypto\insecure_memzero.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minotaur\crypto\sha256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minotaur\crypto\sysendian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minotaur\crypto\yespower.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minotaur\minotaurx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fishhash\3rdParty\fishhash_keccak.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fishhash\fishhash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\flex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_dark.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_dark_lite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_fast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_lite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_soft_shell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_turtle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\cryptonight_turtle_lite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\c_blake256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\c_groestl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\c_jh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\c_keccak.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\c_skein.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\crypto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\groestl_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\hash-ops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\hash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\int-util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\oaes_lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\skein_port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\variant2_int_sqrt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flex\cryptonote\crypto\wild_keccak.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chacha20\chacha20.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xelishash\aes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xelishash\crc32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xelishash\xelishash.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="allium.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="blake.c">
@@ -343,6 +511,9 @@
     <ClCompile Include="keccak.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="keccak512.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="neoscrypt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -365,6 +536,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="skein.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skein2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skydoge.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="x11.c">
@@ -437,6 +614,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Lyra2RE.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="megabtx.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sponge.c">
@@ -517,6 +697,15 @@
     <ClCompile Include="sha3\extra.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="shake\cshake.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shake\keccak.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shake\shake.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="x21s.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -538,6 +727,30 @@
     <ClCompile Include="verthash\tiny_sha3\sha3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="yescrypt\sha256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\yescrypt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\yescrypt-opt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\yescrypt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yespower\crypto\blake2b-yp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yespower\yespower-blake2b.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yespower\yespower-combined.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="yespower\yespower-platform.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="blake2\ref\blake2bp-ref.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -556,6 +769,15 @@
     <ClCompile Include="blake2\ref\blake2xs-ref.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="blake3\blake3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_dispatch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_portable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="sha256csm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -563,6 +785,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="phi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="phi2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="x16rv2.c">
@@ -578,6 +803,84 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sha256dt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="minotaur\crypto\sha256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="minotaur\crypto\yespower.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="minotaur\minotaurx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fishhash\3rdParty\fishhash_keccak.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fishhash\fishhash.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\flex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_dark.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_dark_lite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_fast.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_lite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_soft_shell.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_turtle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\cryptonight_turtle_lite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\aesb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\c_blake256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\c_groestl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\c_jh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\c_keccak.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\c_skein.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\hash.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\oaes_lib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flex\cryptonote\crypto\wild_keccak.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chacha20\chacha20.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xelishash\xelishashv1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xelishash\xelishashv2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

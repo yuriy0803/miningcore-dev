@@ -183,6 +183,54 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
 
                 break;
             }
+
+            case CryptonightHashType.Panthera:
+            {
+                // detect seed hash change
+                if(currentSeedHash != blockTemplate.SeedHash)
+                {
+                    logger.Info(()=> $"Detected new seed hash {blockTemplate.SeedHash} starting @ height {blockTemplate.Height}");
+                    if(poolConfig.EnableInternalStratum == true)
+                    {
+                        Panthera.WithLock(() =>
+                        {
+                            // delete old seed
+                            if(currentSeedHash != null)
+                                Panthera.DeleteSeed(randomXRealm, currentSeedHash);
+                            // activate new one
+                            currentSeedHash = blockTemplate.SeedHash;
+                            Panthera.CreateSeed(randomXRealm, currentSeedHash, randomXFlagsOverride, randomXFlagsAdd, extraPoolConfig.RandomXVMCount);
+                        });
+                    }
+                    else
+                        currentSeedHash = blockTemplate.SeedHash;
+                }
+                break;
+            }
+
+            case CryptonightHashType.RandomXSCash:
+            {
+                // detect seed hash change
+                if(currentSeedHash != blockTemplate.SeedHash)
+                {
+                    logger.Info(()=> $"Detected new seed hash {blockTemplate.SeedHash} starting @ height {blockTemplate.Height}");
+                    if(poolConfig.EnableInternalStratum == true)
+                    {
+                        RandomXSCash.WithLock(() =>
+                        {
+                            // delete old seed
+                            if(currentSeedHash != null)
+                                RandomXSCash.DeleteSeed(randomXRealm, currentSeedHash);
+                            // activate new one
+                            currentSeedHash = blockTemplate.SeedHash;
+                            RandomXSCash.CreateSeed(randomXRealm, currentSeedHash, randomXFlagsOverride, randomXFlagsAdd, extraPoolConfig.RandomXVMCount);
+                        });
+                    }
+                    else
+                        currentSeedHash = blockTemplate.SeedHash;
+                }
+                break;
+            }
         }
     }
 
@@ -258,6 +306,23 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
         }
 
         return true;
+    }
+
+    public void PrepareWorkerJob(CryptonoteWorkerJob workerJob, out string blob, out string target)
+    {
+        blob = null;
+        target = null;
+
+        var job = currentJob;
+
+        if(job != null)
+            job.PrepareWorkerJob(workerJob, out blob, out target);
+    }
+
+    public override CryptonoteJob GetJobForStratum()
+    {
+        var job = currentJob;
+        return job;
     }
 
     #region API-Surface
@@ -354,22 +419,6 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
     }
 
     public BlockchainStats BlockchainStats { get; } = new();
-
-    public void PrepareWorkerJob(CryptonoteWorkerJob workerJob, out string blob, out string target)
-    {
-        blob = null;
-        target = null;
-
-        var job = currentJob;
-
-        if(job != null)
-        {
-            lock(job)
-            {
-                job.PrepareWorkerJob(workerJob, out blob, out target);
-            }
-        }
-    }
 
     public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
         CryptonoteSubmitShareRequest request, CryptonoteWorkerJob workerJob, CancellationToken ct)
@@ -621,6 +670,25 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
             .Concat()
             .Subscribe();
 
+        if(poolConfig.EnableInternalStratum == true)
+        {
+            // make sure we have a current seed
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+
+            do
+            {
+                var blockTemplate = await GetBlockTemplateAsync(ct);
+
+                if(blockTemplate?.Response != null)
+                {
+                    UpdateHashParams(blockTemplate.Response);
+                    break;
+                }
+
+                logger.Info(() => "Waiting for first valid block template");
+            } while(await timer.WaitForNextTickAsync(ct));
+        }
+
         SetupJobUpdates(ct);
     }
 
@@ -665,38 +733,14 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
                 logger.Info(() => $"Subscribing to ZMQ push-updates from {string.Join(", ", zmq.Values)}");
 
                 var blockNotify = rpc.ZmqSubscribe(logger, ct, zmq)
-                    .Where(msg =>
-                    {
-                        bool result = false;
-
-                        try
-                        {
-                            var text = Encoding.UTF8.GetString(msg[0].Read());
-
-                            result = text.StartsWith("json-minimal-chain_main:");
-                        }
-
-                        catch
-                        {
-                        }
-
-                        if(!result)
-                            msg.Dispose();
-
-                        return result;
-                    })
                     .Select(msg =>
                     {
                         using(msg)
                         {
-                            var token = GetFrameAsJToken(msg[0].Read());
-
-                            if (token != null)
-                                return token.Value<long>("first_height").ToString(CultureInfo.InvariantCulture);
-
                             // We just take the second frame's raw data and turn it into a hex string.
                             // If that string changes, we got an update (DistinctUntilChanged)
-                            return msg[0].Read().ToHexString();
+                            var result = msg[0].Read().ToHexString();
+                            return result;
                         }
                     })
                     .DistinctUntilChanged()

@@ -7,6 +7,7 @@ using AutoMapper;
 using Microsoft.IO;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Equihash.Configuration;
+using Miningcore.Blockchain.Equihash.Custom.Veruscoin;
 using Miningcore.Configuration;
 using Miningcore.Extensions;
 using Miningcore.JsonRpc;
@@ -59,10 +60,21 @@ public class EquihashPool : PoolBase
             throw new PoolStartupException("Pool z-address is not configured", pc.Id);
     }
 
+    private EquihashJobManager createEquihashExtraNonceProvider()
+    {
+        switch(coin.Symbol)
+        {
+            case "VRSC":
+                return ctx.Resolve<EquihashJobManager>(new TypedParameter(typeof(IExtraNonceProvider), new VeruscoinExtraNonceProvider(poolConfig.Id, clusterConfig.InstanceId)));
+            
+            default:
+                return ctx.Resolve<EquihashJobManager>(new TypedParameter(typeof(IExtraNonceProvider), new EquihashExtraNonceProvider(poolConfig.Id, clusterConfig.InstanceId)));
+        }
+    }
+
     protected override async Task SetupJobManager(CancellationToken ct)
     {
-        manager = ctx.Resolve<EquihashJobManager>(
-            new TypedParameter(typeof(IExtraNonceProvider), new EquihashExtraNonceProvider(poolConfig.Id, clusterConfig.InstanceId)));
+        manager = createEquihashExtraNonceProvider();
 
         manager.Configure(poolConfig, clusterConfig);
 
@@ -103,12 +115,13 @@ public class EquihashPool : PoolBase
     protected async Task OnSubscribeAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest)
     {
         var request = tsRequest.Value;
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<EquihashWorkerContext>();
 
         if(request.Id == null)
             throw new StratumException(StratumError.MinusOne, "missing request id");
 
         var requestParams = request.ParamsAs<string[]>();
+        context.UserAgent = requestParams.FirstOrDefault()?.Trim();
 
         var data = new object[]
         {
@@ -117,11 +130,21 @@ public class EquihashPool : PoolBase
         .Concat(manager.GetSubscriberData(connection))
         .ToArray();
 
-        await connection.RespondAsync(data, request.Id);
+        // Nicehash's stupid validator insists on "error" property present
+        // in successful responses which is a violation of the JSON-RPC spec
+        // [We miss you Oliver <3 We miss you so much <3 Respect the goddamn standards Nicehash :(]
+        var response = new JsonRpcResponse<object[]>(data, request.Id);
+
+        if(context.IsNicehash || poolConfig.EnableAsicBoost == true)
+        {
+            response.Extra = new Dictionary<string, object>();
+            response.Extra["error"] = null;
+        }
+
+        await connection.RespondAsync(response);
 
         // setup worker context
         context.IsSubscribed = true;
-        context.UserAgent = requestParams.FirstOrDefault()?.Trim();
     }
 
     protected async Task OnAuthorizeAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
@@ -131,7 +154,7 @@ public class EquihashPool : PoolBase
         if(request.Id == null)
             throw new StratumException(StratumError.MinusOne, "missing request id");
 
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<EquihashWorkerContext>();
         var requestParams = request.ParamsAs<string[]>();
         var workerValue = requestParams?.Length > 0 ? requestParams[0] : null;
         var password = requestParams?.Length > 1 ? requestParams[1] : null;
@@ -149,8 +172,19 @@ public class EquihashPool : PoolBase
 
         if(context.IsAuthorized)
         {
+            // Nicehash's stupid validator insists on "error" property present
+            // in successful responses which is a violation of the JSON-RPC spec
+            // [We miss you Oliver <3 We miss you so much <3 Respect the goddamn standards Nicehash :(]
+            var response = new JsonRpcResponse<object>(context.IsAuthorized, request.Id);
+
+            if(context.IsNicehash || poolConfig.EnableAsicBoost == true)
+            {
+                response.Extra = new Dictionary<string, object>();
+                response.Extra["error"] = null;
+            }
+            
             // respond
-            await connection.RespondAsync(context.IsAuthorized, request.Id);
+            await connection.RespondAsync(response);
 
             // log association
             logger.Info(() => $"[{connection.ConnectionId}] Authorized worker {workerValue}");
@@ -187,9 +221,11 @@ public class EquihashPool : PoolBase
                 await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
             }
 
+            var minerJobParams = CreateWorkerJob(connection, context.IsAuthorized);
+
             // send intial update
             await connection.NotifyAsync(EquihashStratumMethods.SetTarget, new object[] { EncodeTarget(context.Difficulty) });
-            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, minerJobParams);
         }
 
         else
@@ -208,10 +244,24 @@ public class EquihashPool : PoolBase
         }
     }
 
+    private object CreateWorkerJob(StratumConnection connection, bool cleanJob)
+    {
+        var context = connection.ContextAs<EquihashWorkerContext>();
+        var job = manager.GetJobForStratum();
+
+        // update context
+        lock(context)
+        {
+            context.AddJob(job, manager.maxActiveJobs);
+        }
+
+        return job.GetJobParams(cleanJob);
+    }
+
     protected virtual async Task OnSubmitAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
     {
         var request = tsRequest.Value;
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<EquihashWorkerContext>();
 
         try
         {
@@ -240,7 +290,19 @@ public class EquihashPool : PoolBase
 
             // submit
             var share = await manager.SubmitShareAsync(connection, requestParams, ct);
-            await connection.RespondAsync(true, request.Id);
+            
+            // Nicehash's stupid validator insists on "error" property present
+            // in successful responses which is a violation of the JSON-RPC spec
+            // [We miss you Oliver <3 We miss you so much <3 Respect the goddamn standards Nicehash :(]
+            var response = new JsonRpcResponse<object>(true, request.Id);
+
+            if(context.IsNicehash || poolConfig.EnableAsicBoost == true)
+            {
+                response.Extra = new Dictionary<string, object>();
+                response.Extra["error"] = null;
+            }
+            
+            await connection.RespondAsync(response);
 
             // publish
             messageBus.SendMessage(share);
@@ -279,7 +341,7 @@ public class EquihashPool : PoolBase
     private async Task OnSuggestTargetAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest)
     {
         var request = tsRequest.Value;
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<EquihashWorkerContext>();
 
         if(request.Id == null)
             throw new StratumException(StratumError.MinusOne, "missing request id");
@@ -363,16 +425,30 @@ public class EquihashPool : PoolBase
 
         logger.Info(() => $"Broadcasting job {((object[]) jobParams)[0]}");
 
+        bool cleanJob;
+        switch(coin.Symbol)
+        {
+            case "VRSC":
+
+                cleanJob = (bool) ((object[]) jobParams)[^2];
+                break;
+            default:
+
+                cleanJob = (bool) ((object[]) jobParams)[^1];
+                break;
+        }
+
         await Guard(() => ForEachMinerAsync(async (connection, ct) =>
         {
-            var context = connection.ContextAs<BitcoinWorkerContext>();
+            var context = connection.ContextAs<EquihashWorkerContext>();
+            var minerJobParams = CreateWorkerJob(connection, cleanJob);
 
             // varDiff: if the client has a pending difficulty change, apply it now
             if(context.ApplyPendingDifficulty())
                 await connection.NotifyAsync(EquihashStratumMethods.SetTarget, new object[] { EncodeTarget(context.Difficulty) });
 
             // send job
-            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, minerJobParams);
         }));
     }
 
@@ -380,7 +456,7 @@ public class EquihashPool : PoolBase
     {
         var multiplier = BitcoinConstants.Pow2x32;
         var result = shares * multiplier / interval / 1000000 * 2;
-
+        
         result /= hashrateDivisor;
         return result;
     }
@@ -393,14 +469,31 @@ public class EquihashPool : PoolBase
 
         if(connection.Context.ApplyPendingDifficulty())
         {
+            bool cleanJob;
+            switch(coin.Symbol)
+            {
+                case "VRSC":
+
+                    cleanJob = (bool) ((object[]) currentJobParams)[^2];
+                    break;
+                default:
+
+                    cleanJob = (bool) ((object[]) currentJobParams)[^1];
+                    break;
+            }
+            if(cleanJob)
+                cleanJob = !cleanJob;
+
+            var minerJobParams = CreateWorkerJob(connection, cleanJob);
+
             await connection.NotifyAsync(EquihashStratumMethods.SetTarget, new object[] { EncodeTarget(connection.Context.Difficulty) });
-            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, minerJobParams);
         }
     }
 
     protected override WorkerContextBase CreateWorkerContext()
     {
-        return new BitcoinWorkerContext();
+        return new EquihashWorkerContext();
     }
 
     private string EncodeTarget(double difficulty)

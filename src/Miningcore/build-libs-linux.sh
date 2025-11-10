@@ -2,6 +2,17 @@
 
 OutDir=$1
 
+# --- Fix für GitHub Actions (keine Hardware-AES-Unterstützung) ---
+# Prüft, ob die CPU AES-Instruktionen unterstützt.
+# Wenn nicht, deaktiviert AES-NI im Compiler, um Build-Fehler zu vermeiden.
+if ! grep -q aes /proc/cpuinfo; then
+  echo "⚙️  Kein AES auf dieser CPU erkannt – deaktiviere AES-NI-Unterstützung"
+  export CFLAGS="-O2 -fPIC -DNO_AES_NI"
+  export CXXFLAGS="-O2 -fPIC -DNO_AES_NI"
+  export CPPFLAGS="-DNO_AES_NI"
+fi
+# ---------------------------------------------------------------
+
 export UNAME_S=$(uname -s)
 export UNAME_P=$(uname -m || uname -p)
 

@@ -385,23 +385,23 @@ public class EthereumPayoutHandler : PayoutHandlerBase,
         var infoResponse = await rpcClient.ExecuteAsync<string>(logger, EC.GetPeerCount, ct);
 
         if((networkType == EthereumNetworkType.Main
-            || extraPoolConfig?.ChainTypeOverride == "Classic"
-            || extraPoolConfig?.ChainTypeOverride == "Mordor"
-            || networkType == EthereumNetworkType.MainPow
-            || extraPoolConfig?.ChainTypeOverride == "Ubiq"
-            || extraPoolConfig?.ChainTypeOverride == "EtherOne"
-            || extraPoolConfig?.ChainTypeOverride == "Pink"
-            || extraPoolConfig?.ChainTypeOverride == "OctaSpace"
-            || extraPoolConfig?.ChainTypeOverride == "OctaSpaceTestnet"
-            || extraPoolConfig?.ChainTypeOverride == "Hypra"
-            || extraPoolConfig?.ChainTypeOverride == "Cortex"
-            || extraPoolConfig?.ChainTypeOverride == "Dolores"
-            || extraPoolConfig?.ChainTypeOverride == "Bernard"
-            || networkType == EthereumNetworkType.Thoreum)  // <-- Thoreum hinzugefügt
-           &&
-           (infoResponse.Error != null
-            || string.IsNullOrEmpty(infoResponse.Response)
-            || infoResponse.Response.IntegralFromHex<int>() < EthereumConstants.MinPayoutPeerCount))
+             || extraPoolConfig?.ChainTypeOverride == "Classic"
+             || extraPoolConfig?.ChainTypeOverride == "Mordor"
+             || networkType == EthereumNetworkType.MainPow
+             || extraPoolConfig?.ChainTypeOverride == "Ubiq"
+             || extraPoolConfig?.ChainTypeOverride == "EtherOne"
+             || extraPoolConfig?.ChainTypeOverride == "Pink"
+             || extraPoolConfig?.ChainTypeOverride == "OctaSpace"
+             || extraPoolConfig?.ChainTypeOverride == "OctaSpaceTestnet"
+             || extraPoolConfig?.ChainTypeOverride == "Hypra"
+             || extraPoolConfig?.ChainTypeOverride == "Cortex"
+             || extraPoolConfig?.ChainTypeOverride == "Dolores"
+             || extraPoolConfig?.ChainTypeOverride == "Bernard"
+             || extraPoolConfig?.ChainTypeOverride == "Thoreum")
+            &&
+            (infoResponse.Error != null
+             || string.IsNullOrEmpty(infoResponse.Response)
+             || infoResponse.Response.IntegralFromHex<int>() < EthereumConstants.MinPayoutPeerCount))
         {
             logger.Warn(() => $"[{LogCategory}] Payout aborted. Not enough peer(s) ({EthereumConstants.MinPayoutPeerCount} required)");
             return false;

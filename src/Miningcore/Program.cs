@@ -193,12 +193,12 @@ public class Program : BackgroundService
                         });
 
                         // NSwag
-                        #if DEBUG
+#if DEBUG
                         services.AddOpenApiDocument(settings =>
                         {
                             settings.DocumentProcessors.Insert(0, new NSwagDocumentProcessor());
                         });
-                        #endif
+#endif
 
                         services.AddResponseCompression();
                         services.AddCors();
@@ -228,9 +228,9 @@ public class Program : BackgroundService
                             "/metrics"
                         }, clusterConfig.Api?.MetricsIpWhitelist);
 
-                        #if DEBUG
+#if DEBUG
                         app.UseOpenApi();
-                        #endif
+#endif
 
                         app.UseResponseCompression();
                         app.UseCors(corsPolicyBuilder => corsPolicyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
@@ -379,20 +379,20 @@ public class Program : BackgroundService
             .Where(config => config.Enabled)
             .Select(config => RunPool(config, coinTemplates, ct));
 
-        await Guard(()=> Task.WhenAll(tasks), ex =>
+        await Guard(() => Task.WhenAll(tasks), ex =>
         {
             switch(ex)
             {
                 case PoolStartupException pse:
-                {
-                    var _logger = pse.PoolId != null ? LogUtil.GetPoolScopedLogger(GetType(), pse.PoolId) : logger;
-                    _logger.Error(() => $"{pse.Message}");
+                    {
+                        var _logger = pse.PoolId != null ? LogUtil.GetPoolScopedLogger(GetType(), pse.PoolId) : logger;
+                        _logger.Error(() => $"{pse.Message}");
 
-                    logger.Error(() => "Cluster cannot start. Good Bye!");
+                        logger.Error(() => "Cluster cannot start. Good Bye!");
 
-                    hal.StopApplication();
-                    break;
-                }
+                        hal.StopApplication();
+                        break;
+                    }
 
                 default:
                     throw ex;
@@ -543,7 +543,7 @@ public class Program : BackgroundService
 
         versionOption = app.Option("-v|--version", "Version Information", CommandOptionType.NoValue);
         configFileOption = app.Option("-c|--config <configfile>", "Configuration File", CommandOptionType.SingleValue);
-        dumpConfigOption = app.Option("-dc|--dumpconfig", "Dump the configuration (useful for trouble-shooting typos in the config file)",CommandOptionType.NoValue);
+        dumpConfigOption = app.Option("-dc|--dumpconfig", "Dump the configuration (useful for trouble-shooting typos in the config file)", CommandOptionType.NoValue);
         shareRecoveryOption = app.Option("-rs", "Import lost shares using existing recovery file", CommandOptionType.SingleValue);
         generateSchemaOption = app.Option("-gcs|--generate-config-schema <outputfile>", "Generate JSON schema from configuration options", CommandOptionType.SingleValue);
         app.HelpOption("-? | -h | --help");
@@ -570,7 +570,7 @@ public class Program : BackgroundService
                 {
                     using(var validatingReader = new JSchemaValidatingReader(jsonReader)
                     {
-                        Schema =  LoadSchema()
+                        Schema = LoadSchema()
                     })
                     {
                         return serializer.Deserialize<ClusterConfig>(validatingReader);
@@ -631,22 +631,8 @@ public class Program : BackgroundService
  ██║╚██╔╝██║██║██║╚██╗██║██║██║╚██╗██║██║   ██║██║     ██║   ██║██╔══██╗██╔══╝
  ██║ ╚═╝ ██║██║██║ ╚████║██║██║ ╚████║╚██████╔╝╚██████╗╚██████╔╝██║  ██║███████╗
 ");
-        Console.WriteLine(" https://github.com/blackmennewstyle/miningcore\n");
+        Console.WriteLine(" https://github.com/yuriy0803/miningcore-dev\n");
         Console.WriteLine(" Donate to one of these addresses to support the project:\n");
-        Console.WriteLine(" ETH   - 0xbC059e88A4dD11c2E882Fc6B83F8Ec12E4CCCFad");
-        Console.WriteLine(" BTC   - 16xvkGfG9nrJSKKo5nGWphP8w4hr2ZzVuw");
-        Console.WriteLine(" LTC   - LLs76baYT7iMqQhizxtBC96Cy48iX3Eh1p");
-        Console.WriteLine(" DOGE  - DFuvDSFh4N3SiXGDnye2Vbc8kqvMHbyQE1");
-        Console.WriteLine(" KAS   - kaspa:qpmf0wyu7c5z4l82ax9cfc5ughwk2f9lgu8uckkqrrpjqkxuk7yrga5nntvgn");
-        Console.WriteLine(" CCX   - ccx7S4B3gBeH1SGWCfqZp3NM7Vavg7H3S8ovJn8fU4bwC4vU7ChWfHtbNzifhrpbJ74bMDxj4KZFTcznTfsucCEg1Kgv7zbNgs");
-        Console.WriteLine(" FIRO  - a5AsoTSkfPHQ3SUmR6binG1XW7oQQoFNU1");
-        Console.WriteLine(" ERGO  - 9gYyuZzaSw3TiCtUkSRuS3XVDUv41EFs3dtNCFGqiEwHqpb7gkF");
-        Console.WriteLine(" WART  - 7795fc0fe93e7e4e232a212f00bdc8885c580a5666d39a0d");
-        Console.WriteLine(" XMR   - 483zaHtMRfM7rw1dXgebhWaRR8QLgAF6w4BomAV319FVVHfdbYTLVuBRc4pQgRAnRpfy6CXvvwngK4Lo3mRKE29RRx3Jb5c");
-        Console.WriteLine(" XEL   - xel:ajnsfv065qusndt0hfsngecrnf5690drmqmc0uq0etlx8zjlcyzqq2slgvt");
-        Console.WriteLine(" CTXC  - 0xbb60200d5151a4a0f9a75014e04cf61a0a9f0daf");
-        Console.WriteLine(" ZANO  - ZxDKT1aqiEXPA5cDADtYEfMR1oXsRd68bby4nzUvVmnjHzzrfvjwhNdQ9yiWNeGutzg9LZdwsbP2FGB1gNpZXiYY1fCfpw33c");
-        Console.WriteLine(" SCASH - scash1qe6dhv8kncz08jtqukyps4l2n83z2umewanlmas");
         Console.WriteLine();
     }
 
@@ -804,7 +790,7 @@ public class Program : BackgroundService
 
         // Configure Etchash
         Miningcore.Crypto.Hashing.Ethash.Etchash.Cache.messageBus = messageBus;
-        
+
         // Configure Ethashb3
         Miningcore.Crypto.Hashing.Ethash.Ethashb3.Cache.messageBus = messageBus;
 
@@ -844,7 +830,7 @@ public class Program : BackgroundService
 
         // Configure Firopow
         Miningcore.Crypto.Hashing.Progpow.Firopow.Cache.messageBus = messageBus;
-        
+
         // Configure Kawpow
         Miningcore.Crypto.Hashing.Progpow.Kawpow.Cache.messageBus = messageBus;
 
@@ -889,7 +875,7 @@ public class Program : BackgroundService
 
         if(enableLegacyTimestampBehavior)
         {
-            logger.Info(()=> "Enabling Npgsql Legacy Timestamp Behavior");
+            logger.Info(() => "Enabling Npgsql Legacy Timestamp Behavior");
 
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
@@ -952,7 +938,7 @@ public class Program : BackgroundService
 
         connectionString.Append($"CommandTimeout={pgConfig.CommandTimeout ?? 300};");
 
-        logger.Debug(()=> $"Using postgres connection string: {connectionString}");
+        logger.Debug(() => $"Using postgres connection string: {connectionString}");
 
         // register connection factory
         builder.RegisterInstance(new PgConnectionFactory(connectionString.ToString()))

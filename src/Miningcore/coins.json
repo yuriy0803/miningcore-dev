@@ -5549,6 +5549,25 @@
         "explorerAccountLink": "https://blockscout.com/etc/mainnet/address/{0}",
         "ethasher": "etchash"
     },
+    "thoreum": {
+        "name": "Thoreum",
+        "canonicalName": "Thoreum",
+        "symbol": "THR",
+        "family": "ethereum",
+        "website": "https://thoreum.org/",
+        "github": "https://github.com/ThoreumPoW/go-thoreum",
+        "market": "https://rabid-rabbit.org/account/trade/THR-USDT",
+        "twitter": "https://x.com/ThoreumPoW",
+        "telegram": "https://t.me/ThoreumPoW",
+        "discord": "https://discord.com/invite/XjMAHsYfEN",
+        "explorerBlockLinks": {
+            "block": "https://thoreum.info/block/$height$",
+            "uncle": "https://thoreum.info/block/$height$"
+        },
+        "explorerTxLink": "https://thoreum.info/tx/{0}",
+        "explorerAccountLink": "https://thoreum.info/address/{0}",
+        "ethasher": "ethash"
+    },
     "ethereum-pow": {
         "name": "EthereumPoW",
         "canonicalName": "EthereumPoW",

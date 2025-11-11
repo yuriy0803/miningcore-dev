@@ -8,23 +8,42 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 0    
-    - name: Install Build dependencies
-      run: sudo apt-get install -y cmake cmake ninja-build build-essential libssl-dev pkg-config libboost-all-dev libsodium-dev libzmq5 libgmp-dev
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+        fetch-depth: 0
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake ninja-build build-essential \
+          libssl-dev pkg-config libboost-all-dev \
+          libsodium-dev libzmq5 libgmp-dev
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
-    - name: Restore dependencies
+
+    - name: Restore NuGet Packages
       run: dotnet restore src
-    - name: Build
-      run: dotnet build --no-restore src
-    - name: Test
-      run: dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src
+
+    - name: Fix Script Permissions
+      run: |
+        chmod +x src/Miningcore/build-libs-linux.sh
+        chmod +x src/Native/*.sh || true
+
+    - name: Build Native Libraries and .NET Project
+      env:
+        CFLAGS: "-O2 -fPIC -maes -msse4.1 -mavx"
+      run: |
+        echo "Building Miningcore with AES/SSE/AVX support..."
+        dotnet build --no-restore src
+
+    - name: Run Tests
+      run: |
+        dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src

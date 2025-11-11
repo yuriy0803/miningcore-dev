@@ -453,7 +453,6 @@ public class EthereumPayoutHandler : PayoutHandlerBase,
 
             case GethChainType.Classic:
             case GethChainType.Mordor:
-                // ETC block reward distribution - ECIP 1017 - https://ecips.ethereumclassic.org/ECIPs/ecip-1017
                 double heightEraLength = height / EthereumClassicConstants.EraLength;
                 double era = Math.Truncate(heightEraLength);
                 decimal quotient = Convert.ToDecimal(Math.Pow(EthereumClassicConstants.DisinflationRateQuotient, era));
@@ -530,6 +529,10 @@ public class EthereumPayoutHandler : PayoutHandlerBase,
                     return CortexConstants.BaseRewardInitial / Math.Floor((decimal) height / CortexConstants.DoloresBlockRewardPeriod);
 
                 return CortexConstants.BaseRewardInitial;
+
+            case GethChainType.Thoreum:
+                // Thoreum Hauptblock-Belohnung = Reward1, Uncles immer 0
+                return ThoreumConstants.Reward1;
 
             default:
                 throw new Exception("Unable to determine block reward: Unsupported chain type");

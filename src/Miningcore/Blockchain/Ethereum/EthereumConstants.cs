@@ -38,7 +38,6 @@ public class EthereumConstants
 }
 
 // ETC block reward distribution - ECIP 1017
-// https://ecips.ethereumclassic.org/ECIPs/ecip-1017
 public class EthereumClassicConstants
 {
     public const ulong HardForkBlockMainnet = 11700000;
@@ -51,7 +50,6 @@ public class EthereumClassicConstants
 }
 
 // Callisto Monetary Policy
-// https://github.com/EthereumCommonwealth/Roadmap/issues/56
 public class CallistoConstants
 {
     public const decimal BaseRewardInitial = 77.76m;
@@ -63,8 +61,7 @@ public class EthOneConstants
     public const decimal BaseRewardInitial = 2.0m;
 }
 
-// OCTA block reward distribution - 
-// https://docs.octa.space/cryptocurrency/monetary-policy
+// OCTA block reward distribution
 public class OctaSpaceConstants
 {
     public const ulong TriangulumHardForkHeight = 10000000;
@@ -96,7 +93,6 @@ public class PinkConstants
 }
 
 // Hypra
-// https://github.com/Rethereum-blockchain/open-rethereum-pool/blob/master/payouts/unlocker.go
 public class HypraConstants
 {
     public const ulong EpochLength = 32000;
@@ -109,8 +105,7 @@ public class HypraConstants
     public const decimal BaseRewardInitial = 4.0m;
 }
 
-// UBIQ block reward distribution - 
-// https://github.com/ubiq/UIPs/issues/16 - https://ubiqsmart.com/en/monetary-policy
+// UBIQ block reward distribution
 public class UbiqConstants
 {
     public const ulong YearOneHeight = 358363;
@@ -126,22 +121,35 @@ public class UbiqConstants
     public const decimal BaseRewardInitial = 8.0m;
 }
 
-// CORTEX block reward distribution - 
-// https://github.com/CortexFoundation/CortexTheseus/blob/master/params/config.go#L88
+// CORTEX block reward distribution
 public class CortexConstants
 {
     public static double Pow2x30 = Math.Pow(2, 30);
     public static BigInteger BigPow2x30 = new(Pow2x30);
 
-    public const ulong BaseBlockRewardPeriod = 8409600; // Halving every four years: 365 days * 24 hours * 60 minutes * 4 blocks * 4 years = 8409600
+    public const ulong BaseBlockRewardPeriod = 8409600;
     public const ulong DoloresBlockRewardPeriod = 1000000;
-
     public const decimal BaseRewardInitial = 7.0m;
-
     public const int CuckarooHeaderNonceSize = 40;
     public const int CuckarooSolutionSize = 42;
 }
 
+// --- THOREUM CONSTANTS ---
+public class ThoreumConstants
+{
+    public const ulong EpochLength = 30000;
+    public const decimal Reward1 = 10.0m;
+    public const decimal Reward2 = 8.0m;
+    public const decimal Reward3 = 6.0m;
+    public const decimal Reward4 = 4.0m;
+    public const decimal Reward5 = 2.0m;
+    public const decimal Reward6 = 1.0m;
+    public const decimal Reward7 = 0.5m;
+    public const decimal Reward8 = 0.1m;
+    public const decimal BaseRewardInitial = Reward1;
+}
+
+// --- NETWORK TYPES ---
 public enum EthereumNetworkType
 {
     Main = 1,
@@ -159,6 +167,7 @@ public enum EthereumNetworkType
     Cortex = 21,
     Dolores = 43,
     Bernard = 42,
+    Thoreum = 900000, // THOREUM Netzwerk
 
     Unknown = -1,
 }
@@ -180,10 +189,12 @@ public enum GethChainType
     Cortex = 21,
     Dolores = 43,
     Bernard = 42,
-    
+    Thoreum = 900000, // THOREUM ChainType
+
     Unknown = -1,
 }
 
+// --- ETH COMMANDS ---
 public static class EthCommands
 {
     public const string GetWork = "_getWork";

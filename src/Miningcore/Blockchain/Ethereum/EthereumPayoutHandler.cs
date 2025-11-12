@@ -531,8 +531,25 @@ public class EthereumPayoutHandler : PayoutHandlerBase,
                 return CortexConstants.BaseRewardInitial;
 
             case GethChainType.Thoreum:
-                // Thoreum Hauptblock-Belohnung = Reward1, Uncles immer 0
-                return ThoreumConstants.Reward1;
+                {
+                    // Thoreum Blockbelohnung abhängig von der Blockhöhe, Uncles immer 0
+                    if(height <= 100_000)
+                        return ThoreumConstants.Reward1; // 10 ETH
+                    else if(height <= 200_000)
+                        return ThoreumConstants.Reward2; // 8 ETH
+                    else if(height <= 300_000)
+                        return ThoreumConstants.Reward3; // 6 ETH
+                    else if(height <= 400_000)
+                        return ThoreumConstants.Reward4; // 4 ETH
+                    else if(height <= 500_000)
+                        return ThoreumConstants.Reward5; // 2 ETH
+                    else if(height <= 1_000_000)
+                        return ThoreumConstants.Reward6; // 1 ETH
+                    else if(height <= 2_000_000)
+                        return ThoreumConstants.Reward7; // 0.5 ETH
+                    else
+                        return ThoreumConstants.Reward8; // 0.1 ETH
+                }
 
             default:
                 throw new Exception("Unable to determine block reward: Unsupported chain type");

@@ -146,9 +146,7 @@ public class ThoreumConstants
     public const decimal Reward6 = 1.0m;
     public const decimal Reward7 = 0.5m;
     public const decimal Reward8 = 0.1m;
-    public const decimal BaseRewardInitial = Reward1;
 }
-
 // --- NETWORK TYPES ---
 public enum EthereumNetworkType
 {
